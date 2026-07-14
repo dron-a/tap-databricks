@@ -29,7 +29,7 @@ license = "Apache-2.0"
 license-files = [ "LICENSE" ]
 requires-python = ">=3.10"
 dependencies = [
-    "databricks-sdk>=0.115.0",
+    "databricks-sdk>=0.120.0",
     "databricks-sqlalchemy>=2.0.9",
     "singer-sdk~=0.54.4",
     "sqlalchemy~=2.0.36",
