@@ -1,0 +1,74 @@
+send_anonymous_usage_stats: true
+project_id: "tap-databricks"
+default_environment: test
+requires_meltano: ">=4.0"
+environments:
+- name: test
+plugins:
+  extractors:
+  - name: "tap-databricks"
+    namespace: "tap_databricks"
+    pip_url: -e .
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    - structured-logging
+
+    # Settings defined in tap_databricks/tap.py
+    settings:
+    - name: server_hostname
+      kind: string
+      label: Server Hostname
+      description: Workspace hostname, e.g. dbc-xxxx.cloud.databricks.com (no https://)
+
+    - name: http_path
+      kind: string
+      label: HTTP Path
+      description: SQL Warehouse / cluster HTTP path, e.g. /sql/1.0/warehouses/abc123
+
+    - name: access_token
+      kind: string
+      label: Access Token
+      description: Databricks personal access token
+      sensitive: true
+
+    - name: client_id
+      kind: string
+      label: Client ID
+      description: Service principal Client ID (M2M auth)
+
+    - name: client_secret
+      kind: string
+      label: Client Secret
+      description: Service principal OAuth secret (M2M auth)
+      sensitive: true
+
+    - name: catalog
+      kind: string
+      label: Catalog
+      description: Unity Catalog catalog to extract from
+
+    - name: schema
+      kind: string
+      label: Schema
+      description: Optional schema to scope extraction; if omitted, all schemas in the catalog are discovered
+
+    # Validate that required settings are provided for either PAT or M2M OAuth authentication
+    settings_group_validation:
+    - - server_hostname
+      - http_path
+      - catalog
+      - access_token
+    - - server_hostname
+      - http_path
+      - catalog
+      - client_id
+      - client_secret
+
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
