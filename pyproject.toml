@@ -43,7 +43,7 @@ Issues = "https://github.com/MeltanoLabs/tap-databricks/issues"
 
 [project.optional-dependencies]
 s3 = [
-    "s3fs>=2026.1.0",
+    "s3fs>=2026.6.0",
 ]
 
 [project.scripts]
