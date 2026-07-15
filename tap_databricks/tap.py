@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from singer_sdk import typing as th  # JSON schema typing helpers
 from singer_sdk.sql import SQLTap
+from singer_sdk.helpers.capabilities import PluginCapabilities
 
 from tap_databricks.client import DatabricksStream
 
@@ -52,6 +53,9 @@ class TapDatabricks(SQLTap):
         ),
     ).to_dict()
 
+    # BATCH is inherited from the SDK but not yet implemented/validated here
+    # (planned as future work)
+    capabilities =  capabilities = [c for c in SQLTap.capabilities if c != PluginCapabilities.BATCH]
 
 if __name__ == "__main__":
     TapDatabricks.cli()

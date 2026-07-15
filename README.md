@@ -13,7 +13,6 @@ It extracts data from Databricks SQL Warehouses over the [`databricks-sqlalchemy
 - `activate-version`
 - `stream-maps`
 - `schema-flattening`
-- `batch`
 - `structured-logging`
 
 Supports **full-table** and **incremental** replication, automatic schema discovery via SQLAlchemy reflection, and resilient discovery that skips unreadable tables rather than failing the whole run.

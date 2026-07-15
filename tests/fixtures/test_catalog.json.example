@@ -1,0 +1,44 @@
+{
+  "streams": [
+    {
+      "tap_stream_id": "snpt_tbl",
+      "table_name": "snpt_tbl",
+      "replication_method": "INCREMENTAL",
+      "key_properties": [],
+      "schema": {
+        "properties": {
+          "ID": { "type": ["string", "null"] },
+          "NAME": { "type": ["string", "null"] },
+          "ACCOUNTID": { "type": ["string", "null"] },
+          "OWNERID": { "type": ["string", "null"] },
+          "PIPELINE__C": { "type": ["string", "null"] },
+          "LASTMODIFIEDDATE": { "type": ["string", "null"] }
+        },
+        "type": "object",
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "is_view": false,
+      "stream": "snpt_tbl",
+      "metadata": [
+        { "breadcrumb": ["properties", "ID"],                 "metadata": { "inclusion": "available" } },
+        { "breadcrumb": ["properties", "NAME"],               "metadata": { "inclusion": "available" } },
+        { "breadcrumb": ["properties", "ACCOUNTID"],          "metadata": { "inclusion": "available" } },
+        { "breadcrumb": ["properties", "OWNERID"],            "metadata": { "inclusion": "available" } },
+        { "breadcrumb": ["properties", "PIPELINE__C"], "metadata": { "inclusion": "available" } },
+        { "breadcrumb": ["properties", "LASTMODIFIEDDATE"],   "metadata": { "inclusion": "available" } },
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "inclusion": "available",
+            "table-key-properties": [],
+            "forced-replication-method": "FULL_TABLE",
+            "schema-name": "",
+            "selected": true,
+            "replication-key": "LASTMODIFIEDDATE",
+            "replication-method": "INCREMENTAL"
+          }
+        }
+      ]
+    }
+  ]
+}
