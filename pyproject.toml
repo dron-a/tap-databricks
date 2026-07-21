@@ -30,9 +30,9 @@ license-files = [ "LICENSE" ]
 requires-python = ">=3.10"
 dependencies = [
     "databricks-sdk>=0.115.0",
-    "databricks-sqlalchemy>=2.0.9",
-    "singer-sdk~=0.54.4",
-    "sqlalchemy~=2.0.36",
+    "databricks-sqlalchemy>=2.0.10",
+    "singer-sdk~=0.54.5",
+    "sqlalchemy~=2.0.51",
     "typing-extensions>=4.5.0; python_version < '3.13'",
 ]
 
