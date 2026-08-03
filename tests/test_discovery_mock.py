@@ -209,7 +209,7 @@ def test_auth_pat_first(monkeypatch):
         lambda url, **kw: captured.update(url=url, kw=kw) or "ENGINE",
     )
     DatabricksConnector(config=dict(PAT_CONFIG)).create_engine()
-    assert "connect_args" not in captured["kw"]   # PAT rides in URL
+    assert captured["kw"]["connect_args"] == {}   # PAT rides in URL; no knobs set
 
 
 def test_auth_sp_uses_credentials_provider(monkeypatch):
@@ -226,3 +226,43 @@ def test_auth_none_raises(monkeypatch):
     monkeypatch.setattr("sqlalchemy.create_engine", lambda *a, **k: "ENGINE")
     with pytest.raises(ValueError):
         DatabricksConnector(config=dict(NO_AUTH_CONFIG)).create_engine()
+
+
+# ---------------- G: connect_args knobs ----------------
+
+def test_g_pat_carries_knobs(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        "sqlalchemy.create_engine",
+        lambda url, **kw: captured.update(url=url, kw=kw) or "ENGINE",
+    )
+    cfg = dict(PAT_CONFIG, max_download_threads=4, use_cloud_fetch=False)
+    DatabricksConnector(config=cfg).create_engine()
+    assert captured["kw"]["connect_args"] == {
+        "max_download_threads": 4,
+        "use_cloud_fetch": False,
+    }
+
+
+def test_g_sp_merges_knobs_with_credentials(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        "sqlalchemy.create_engine",
+        lambda url, **kw: captured.update(url=url, kw=kw) or "ENGINE",
+    )
+    cfg = dict(SP_CONFIG, max_download_threads=2)
+    DatabricksConnector(config=cfg).create_engine()
+    ca = captured["kw"]["connect_args"]
+    assert callable(ca["credentials_provider"])
+    assert ca["max_download_threads"] == 2
+    assert "use_cloud_fetch" not in ca   # default true -> not passed
+
+
+def test_g_sp_no_knobs_only_credentials(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        "sqlalchemy.create_engine",
+        lambda url, **kw: captured.update(url=url, kw=kw) or "ENGINE",
+    )
+    DatabricksConnector(config=dict(SP_CONFIG)).create_engine()
+    assert set(captured["kw"]["connect_args"]) == {"credentials_provider"}

@@ -51,11 +51,32 @@ class TapDatabricks(SQLTap):
             title="Schema",
             description="Optional schema to scope extraction; if omitted, all schemas in the catalog are discovered",
         ),
+        th.Property(
+            "max_download_threads",
+            th.IntegerType,
+            required=False,
+            description=(
+                "Maximum parallel Cloud Fetch download threads. Bounds in-flight "
+                "result chunks (each ~20MB compressed); lower to reduce peak memory, "
+                "raise for throughput. Unset = driver default."
+            ),
+        ),
+        th.Property(
+            "use_cloud_fetch",
+            th.BooleanType,
+            required=False,
+            default=True,
+            description=(
+                "Fetch results via cloud storage links (parallel, high throughput). "
+                "Set false to stream inline over the connection — lower memory, slower; "
+                "for memory-constrained environments or very wide tables."
+            ),
+),
     ).to_dict()
 
     # BATCH is inherited from the SDK but not yet implemented/validated here
     # (planned as future work)
-    capabilities =  capabilities = [c for c in SQLTap.capabilities if c != PluginCapabilities.BATCH]
+    capabilities = [c for c in SQLTap.capabilities if c != PluginCapabilities.BATCH]
 
 if __name__ == "__main__":
     TapDatabricks.cli()

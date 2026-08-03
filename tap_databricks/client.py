@@ -154,11 +154,26 @@ class DatabricksConnector(SQLConnector):
             "databricks", host=config["server_hostname"], query=query,
         ).render_as_string(hide_password=False)
 
+    def _driver_connect_args(self) -> dict[str, Any]:
+        """Optional databricks-sql-connector knobs from tap config.
+
+        Verified on databricks-sql-connector 4.2.6: connect_args survive the
+        dialect's cparams merge into databricks.sql.connect(), and
+        max_download_threads observably bounds Cloud Fetch parallelism.
+        """
+        args: dict[str, Any] = {}
+        if self.config.get("max_download_threads") is not None:
+            args["max_download_threads"] = self.config["max_download_threads"]
+        if not self.config.get("use_cloud_fetch", True):
+            args["use_cloud_fetch"] = False
+        return args
+
     @override
     def create_engine(self) -> Engine:
         config = self.config
+        knobs = self._driver_connect_args()
         if config.get("access_token"):  # PAT-first
-            return sqlalchemy.create_engine(self.sqlalchemy_url)
+            return sqlalchemy.create_engine(self.sqlalchemy_url, connect_args=knobs)
         if config.get("client_id") and config.get("client_secret"):  # SP fallback
             def credential_provider():
                 return oauth_service_principal(Config(
@@ -168,7 +183,7 @@ class DatabricksConnector(SQLConnector):
                 ))
             return sqlalchemy.create_engine(
                 self.sqlalchemy_url,
-                connect_args={"credentials_provider": credential_provider},
+                connect_args={"credentials_provider": credential_provider, **knobs},
             )
         raise ValueError("Provide either access_token (PAT) or client_id + client_secret (M2M).")
 
@@ -479,43 +494,43 @@ class DatabricksStream(SQLStream):
 
         return query  # noqa: RET504
 
-    @override
-    def get_records(self, context: Context | None) -> Iterable[Record]:
-        """Return a generator of record-type dictionary objects.
+    # @override
+    # def get_records(self, context: Context | None) -> Iterable[Record]:
+    #     """Return a generator of record-type dictionary objects.
 
-        Developers may override this method to implement custom record retrieval
-        logic, such as batch processing, result set optimization, or custom
-        data transformations. This is particularly useful when the source database
-        provides batch-optimized record retrieval mechanisms.
+    #     Developers may override this method to implement custom record retrieval
+    #     logic, such as batch processing, result set optimization, or custom
+    #     data transformations. This is particularly useful when the source database
+    #     provides batch-optimized record retrieval mechanisms.
 
-        Args:
-            context: If provided, will read specifically from this data slice.
+    #     Args:
+    #         context: If provided, will read specifically from this data slice.
 
-        Yields:
-            One dict per record.
-        """
-        # Example implementation with query optimization:
-        # 1. Get selected columns to avoid SELECT *
-        selected_column_names = self.get_selected_schema()["properties"].keys()
-        table = self.connector.get_table(
-            full_table_name=self.fully_qualified_name,
-            column_names=selected_column_names,
-        )
-        query = table.select()
+    #     Yields:
+    #         One dict per record.
+    #     """
+    #     # Example implementation with query optimization:
+    #     # 1. Get selected columns to avoid SELECT *
+    #     selected_column_names = self.get_selected_schema()["properties"].keys()
+    #     table = self.connector.get_table(
+    #         full_table_name=self.fully_qualified_name,
+    #         column_names=selected_column_names,
+    #     )
+    #     query = table.select()
 
-        # 2. Apply replication key ordering and filtering
-        if self.replication_key:
-            replication_key_col = table.columns[self.replication_key]
-            query = query.order_by(replication_key_col)
+    #     # 2. Apply replication key ordering and filtering
+    #     if self.replication_key:
+    #         replication_key_col = table.columns[self.replication_key]
+    #         query = query.order_by(replication_key_col)
 
-            start_val = self.get_starting_replication_key_value(context)
-            if start_val:
-                query = query.where(replication_key_col >= start_val)
+    #         start_val = self.get_starting_replication_key_value(context)
+    #         if start_val:
+    #             query = query.where(replication_key_col >= start_val)
 
-        # 3. Execute query and yield records
-        with self.connector._connect() as connection:  # noqa: SLF001
-            for record in connection.execute(query).mappings():
-                yield dict(record)
+    #     # 3. Execute query and yield records
+    #     with self.connector._connect() as connection:  # noqa: SLF001
+    #         for record in connection.execute(query).mappings():
+    #             yield dict(record)
 
-        # Alternative: Use the default implementation
-        # yield from super().get_records(context)
+    #     # Alternative: Use the default implementation
+    #     # yield from super().get_records(context)
